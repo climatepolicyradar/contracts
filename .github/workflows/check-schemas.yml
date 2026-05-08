@@ -13,7 +13,7 @@ jobs:
       contents: write       # auto-commit drifted artifacts
       pull-requests: write  # post the sticky semver comment
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # On PRs, check out the head branch (not the merge commit) so auto-commit
           # has a real branch to push to. On main pushes, github.head_ref is empty
@@ -21,11 +21,11 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
@@ -49,7 +49,7 @@ jobs:
         if: |
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: regenerate artifacts"
           file_pattern: "schemas/openapi.yaml dbt/*.yml typescript/src/*"
@@ -122,7 +122,7 @@ jobs:
 
       - name: Post sticky PR comment
         if: github.event_name == 'pull_request' && steps.base.outputs.exists == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: semver-classification
           path: /tmp/comment.md
