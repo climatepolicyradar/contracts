@@ -1,53 +1,47 @@
-/**
- * A document in the Climate Policy Radar corpus.
- */
 export type Document = {
-    /**
-     * Full text content of the document
-     */
-    content?: null | string;
-    /**
-     * Unique identifier for the document
-     */
-    id: string;
-    /**
-     * Labels applied to this document
-     */
-    labels?: Label[];
-    /**
-     * Arbitrary additional metadata
-     */
-    metadata?: { [key: string]: any };
-    /**
-     * Date the document was published
-     */
-    publication_date?: Date | null;
-    /**
-     * URL of the source document
-     */
-    source_url?: null | string;
-    /**
-     * Document title
-     */
-    title: string;
+    attributes?:  { [key: string]: boolean | number | string };
+    description?: null | string;
+    documents:    DocumentRelationship[];
+    id:           string;
+    items?:       Item[];
+    labels:       LabelRelationship[];
+    title:        string;
     [property: string]: any;
 }
 
-/**
- * A classification label that can be applied to a Document.
- */
-export type Label = {
-    /**
-     * Unique identifier for the label
-     */
-    id: string;
-    /**
-     * Human-readable label name
-     */
-    name: string;
-    /**
-     * Label category, e.g. 'sector', 'geography', 'instrument'
-     */
-    type: string;
+export type DocumentRelationship = {
+    timestamp?: Date | null;
+    type:       string;
+    value:      DocumentWithoutDocumentRelationships;
+    [property: string]: any;
+}
+
+export type DocumentWithoutDocumentRelationships = {
+    attributes?:  { [key: string]: boolean | number | string };
+    description?: null | string;
+    id:           string;
+    items?:       Item[];
+    labels?:      LabelRelationship[];
+    title:        string;
+    [property: string]: any;
+}
+
+export type Item = {
+    content_type?: null | string;
+    type:          string;
+    url?:          null | string;
+    [property: string]: any;
+}
+
+export type LabelRelationship = {
+    timestamp?: Date | null;
+    type:       string;
+    value:      LabelWithoutLabelRelationships;
+    [property: string]: any;
+}
+
+export type LabelWithoutLabelRelationships = {
+    attributes?: { [key: string]: boolean | number | string };
+    value:       string;
     [property: string]: any;
 }

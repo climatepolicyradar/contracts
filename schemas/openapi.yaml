@@ -6,88 +6,242 @@ info:
 paths: {}
 components:
   schemas:
-    Document:
-      description: A document in the Climate Policy Radar corpus.
-      examples:
-        - content: null
-          id: doc1
-          labels:
-            - id: l1
-              name: Energy
-              type: sector
-          metadata: {}
-          publication_date: '2008-11-26'
-          source_url: https://example.com/doc.pdf
-          title: UK Climate Change Act 2008
+    BaseDocument:
       properties:
         id:
-          description: Unique identifier for the document
           title: Id
           type: string
         title:
-          description: Document title
           title: Title
           type: string
-        source_url:
+        description:
           anyOf:
             - type: string
             - type: 'null'
           default: null
-          description: URL of the source document
-          title: Source Url
-        publication_date:
-          anyOf:
-            - format: date
-              type: string
-            - type: 'null'
-          default: null
-          description: Date the document was published
-          title: Publication Date
-        content:
-          anyOf:
-            - type: string
-            - type: 'null'
-          default: null
-          description: Full text content of the document
-          title: Content
-        labels:
-          description: Labels applied to this document
+          title: Description
+        items:
+          default: []
           items:
-            $ref: '#/components/schemas/Label'
-          title: Labels
+            $ref: '#/components/schemas/Item'
+          title: Items
           type: array
-        metadata:
-          additionalProperties: true
-          description: Arbitrary additional metadata
-          title: Metadata
+        attributes:
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+          default: {}
+          title: Attributes
           type: object
       required:
         - id
         - title
-      title: Document
+      title: BaseDocument
       type: object
-    Label:
-      description: A classification label that can be applied to a Document.
-      examples:
-        - id: l1
-          name: Energy
-          type: sector
+    BaseLabel:
+      properties:
+        value:
+          title: Value
+          type: string
+        attributes:
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+          default: {}
+          title: Attributes
+          type: object
+      required:
+        - value
+      title: BaseLabel
+      type: object
+    Document:
       properties:
         id:
-          description: Unique identifier for the label
           title: Id
           type: string
-        name:
-          description: Human-readable label name
-          title: Name
+        title:
+          title: Title
           type: string
-        type:
-          description: Label category, e.g. 'sector', 'geography', 'instrument'
-          title: Type
-          type: string
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          default: null
+          title: Description
+        items:
+          default: []
+          items:
+            $ref: '#/components/schemas/Item'
+          title: Items
+          type: array
+        attributes:
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+          default: {}
+          title: Attributes
+          type: object
+        labels:
+          items:
+            $ref: '#/components/schemas/LabelRelationship'
+          title: Labels
+          type: array
+        documents:
+          items:
+            $ref: '#/components/schemas/DocumentRelationship'
+          title: Documents
+          type: array
       required:
         - id
-        - name
+        - title
+        - labels
+        - documents
+      title: Document
+      type: object
+    DocumentRelationship:
+      properties:
+        type:
+          title: Type
+          type: string
+        value:
+          $ref: '#/components/schemas/DocumentWithoutDocumentRelationships'
+        timestamp:
+          anyOf:
+            - format: date-time
+              type: string
+            - type: 'null'
+          default: null
+          title: Timestamp
+      required:
         - type
+        - value
+      title: DocumentRelationship
+      type: object
+    DocumentWithoutDocumentRelationships:
+      properties:
+        id:
+          title: Id
+          type: string
+        title:
+          title: Title
+          type: string
+        description:
+          anyOf:
+            - type: string
+            - type: 'null'
+          default: null
+          title: Description
+        items:
+          default: []
+          items:
+            $ref: '#/components/schemas/Item'
+          title: Items
+          type: array
+        attributes:
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+          default: {}
+          title: Attributes
+          type: object
+        labels:
+          default: []
+          items:
+            $ref: '#/components/schemas/LabelRelationship'
+          title: Labels
+          type: array
+      required:
+        - id
+        - title
+      title: DocumentWithoutDocumentRelationships
+      type: object
+    Item:
+      properties:
+        url:
+          anyOf:
+            - type: string
+            - type: 'null'
+          default: null
+          title: Url
+        type:
+          title: Type
+          type: string
+        content_type:
+          anyOf:
+            - type: string
+            - type: 'null'
+          default: null
+          title: Content Type
+      required:
+        - type
+      title: Item
+      type: object
+    Label:
+      properties:
+        value:
+          title: Value
+          type: string
+        attributes:
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+          default: {}
+          title: Attributes
+          type: object
+        labels:
+          items:
+            $ref: '#/components/schemas/LabelRelationship'
+          title: Labels
+          type: array
+      required:
+        - value
+        - labels
       title: Label
+      type: object
+    LabelRelationship:
+      properties:
+        type:
+          title: Type
+          type: string
+        value:
+          $ref: '#/components/schemas/LabelWithoutLabelRelationships'
+        timestamp:
+          anyOf:
+            - format: date-time
+              type: string
+            - type: 'null'
+          default: null
+          title: Timestamp
+      required:
+        - type
+        - value
+      title: LabelRelationship
+      type: object
+    LabelWithoutLabelRelationships:
+      properties:
+        value:
+          title: Value
+          type: string
+        attributes:
+          additionalProperties:
+            anyOf:
+              - type: string
+              - type: number
+              - type: boolean
+          default: {}
+          title: Attributes
+          type: object
+      required:
+        - value
+      title: LabelWithoutLabelRelationships
       type: object
