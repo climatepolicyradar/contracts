@@ -75,7 +75,8 @@ jobs:
       - name: Install oasdiff
         if: github.event_name == 'pull_request'
         run: |
-          curl -fsSL https://github.com/oasdiff/oasdiff/releases/latest/download/oasdiff_linux_amd64.tar.gz \
+          VERSION=$(curl -fsSL https://api.github.com/repos/oasdiff/oasdiff/releases/latest | jq -r '.tag_name | ltrimstr("v")')
+          curl -fsSL "https://github.com/oasdiff/oasdiff/releases/download/v${VERSION}/oasdiff_${VERSION}_linux_amd64.tar.gz" \
             | tar -xz -C /tmp
           sudo mv /tmp/oasdiff /usr/local/bin/oasdiff
 
