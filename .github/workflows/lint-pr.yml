@@ -21,4 +21,5 @@ jobs:
           types: |
             feat
             fix
+            chore
           requireScope: false
