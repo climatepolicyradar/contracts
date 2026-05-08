@@ -18,12 +18,32 @@ class Contract:
     dbt_tables: list[tuple[type[BaseModel], int]]  # (model, version) for dbt table output
 
 
-from cpr_contracts.models import Document, Label  # noqa: E402
+from cpr_contracts.models import (  # noqa: E402
+    BaseDocument,
+    BaseLabel,
+    Document,
+    DocumentRelationship,
+    DocumentWithoutDocumentRelationships,
+    Item,
+    Label,
+    LabelRelationship,
+    LabelWithoutLabelRelationships,
+)
 
 CONTRACTS: list[Contract] = [
     Contract(
         name="documents",
-        schema_models=[Document, Label],
+        schema_models=[
+            BaseLabel,
+            Label,
+            LabelWithoutLabelRelationships,
+            LabelRelationship,
+            Item,
+            BaseDocument,
+            Document,
+            DocumentWithoutDocumentRelationships,
+            DocumentRelationship,
+        ],
         dbt_tables=[(Document, 1)],
     ),
 ]

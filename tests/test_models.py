@@ -4,31 +4,29 @@ import yaml
 from pydantic import BaseModel
 from pydantic.json_schema import JsonSchemaMode, models_json_schema
 
-from cpr_contracts import Document, Label
+from cpr_contracts import Document, Label, LabelRelationship, LabelWithoutLabelRelationships
 from cpr_contracts.registry import CONTRACTS
 
 ROOT = Path(__file__).parent.parent
 
 
 def test_label_roundtrip():
-    l = Label(id="l1", name="Energy", type="sector")
-    assert Label.model_validate(l.model_dump()) == l
+    label = Label(value="Energy", attributes={}, labels=[])
+    assert Label.model_validate(label.model_dump()) == label
 
 
 def test_document_roundtrip():
-    doc = Document(
-        id="doc1",
-        title="UK Climate Change Act 2008",
-        labels=[Label(id="l1", name="Energy", type="sector")],
-    )
+    rel = LabelRelationship(type="sector", value=LabelWithoutLabelRelationships(value="Energy"))
+    doc = Document(id="doc1", title="UK Climate Change Act 2008", labels=[rel], documents=[])
     assert Document.model_validate(doc.model_dump()) == doc
 
 
 def test_document_optional_fields():
-    doc = Document(id="doc1", title="Minimal")
-    assert doc.source_url is None
-    assert doc.labels == []
-    assert doc.metadata == {}
+    rel = LabelRelationship(type="sector", value=LabelWithoutLabelRelationships(value="Energy"))
+    doc = Document(id="doc1", title="Minimal", labels=[rel], documents=[])
+    assert doc.description is None
+    assert doc.items == []
+    assert doc.attributes == {}
 
 
 def test_openapi_in_sync():

@@ -13,7 +13,7 @@ jobs:
       contents: write       # auto-commit drifted artifacts
       pull-requests: write  # post the sticky semver comment
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # On PRs, check out the head branch (not the merge commit) so auto-commit
           # has a real branch to push to. On main pushes, github.head_ref is empty
@@ -21,11 +21,11 @@ jobs:
           ref: ${{ github.head_ref }}
           fetch-depth: 0
 
-      - uses: astral-sh/setup-uv@v4
+      - uses: astral-sh/setup-uv@v8.1.0
         with:
           enable-cache: true
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "22"
           cache: "npm"
@@ -49,7 +49,7 @@ jobs:
         if: |
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: regenerate artifacts"
           file_pattern: "schemas/openapi.yaml dbt/*.yml typescript/src/*"
@@ -72,12 +72,13 @@ jobs:
 
       # ---- PR-only: semver classification ----
 
-      - name: Install oasdiff
+      - name: Install openapi-changes
         if: github.event_name == 'pull_request'
         run: |
-          curl -fsSL https://github.com/oasdiff/oasdiff/releases/latest/download/oasdiff_linux_amd64.tar.gz \
+          VERSION=$(curl -fsSL https://api.github.com/repos/pb33f/openapi-changes/releases/latest | jq -r '.tag_name | ltrimstr("v")')
+          curl -fsSL "https://github.com/pb33f/openapi-changes/releases/download/v${VERSION}/openapi-changes_${VERSION}_linux_x86_64.tar.gz" \
             | tar -xz -C /tmp
-          sudo mv /tmp/oasdiff /usr/local/bin/oasdiff
+          sudo mv /tmp/openapi-changes /usr/local/bin/openapi-changes
 
       - name: Get base-branch openapi
         id: base
@@ -121,7 +122,7 @@ jobs:
 
       - name: Post sticky PR comment
         if: github.event_name == 'pull_request' && steps.base.outputs.exists == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
+        uses: marocchino/sticky-pull-request-comment@v3
         with:
           header: semver-classification
           path: /tmp/comment.md
@@ -144,10 +145,15 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
-          curl -s -X POST "https://slack.com/api/chat.postMessage" \
+          RESPONSE=$(curl -s -X POST "https://slack.com/api/chat.postMessage" \
             -H "Authorization: Bearer $SLACK_TOKEN" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/json; charset=utf-8" \
             -d "{
-              \"channel\": \"#staging-updates\",
+              \"channel\": \"#test-james\",
               \"text\": \"⚠️ Breaking contract change: <$PR_URL|$PR_TITLE> by $PR_AUTHOR — <@U07TD111D98> please take a look.\"
-            }"
+            }")
+          echo "$RESPONSE"
+          if [[ $(echo "$RESPONSE" | jq -r '.ok') != "true" ]]; then
+            echo "::error::Slack notification failed: $(echo "$RESPONSE" | jq -r '.error')"
+            exit 1
+          fi

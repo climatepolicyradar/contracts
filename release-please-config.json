@@ -11,7 +11,7 @@
           "path": "typescript/package.json",
           "jsonpath": "$.version"
         },
-        "src/document_models/__init__.py"
+        "src/cpr_contracts/__init__.py"
       ],
       "changelog-sections": [
         { "type": "feat", "section": "Features" },
