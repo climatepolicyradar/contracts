@@ -1,0 +1,20 @@
+{
+  "name": "@climatepolicyradar/contracts",
+  "version": "1.0.0",
+  "description": "TypeScript types generated from the cpr-contracts OpenAPI contract",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "generate": "node scripts/extract-schema.mjs | quicktype --src-lang schema --lang ts --just-types --prefer-types --prefer-unions --top-level Document --out src/index.ts",
+    "build": "tsc",
+    "prepublishOnly": "npm run generate && npm run build"
+  },
+  "devDependencies": {
+    "js-yaml": "^4.1.0",
+    "quicktype": "^23.0.0",
+    "typescript": "^5.0.0"
+  }
+}

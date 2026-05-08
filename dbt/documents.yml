@@ -1,0 +1,30 @@
+version: 2
+models:
+  - name: document_v1
+    description: A document in the Climate Policy Radar corpus.
+    columns:
+      - name: id
+        description: Unique identifier for the document
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: title
+        description: Document title
+        data_type: STRING
+        data_tests:
+          - not_null
+      - name: source_url
+        description: URL of the source document
+        data_type: STRING
+      - name: publication_date
+        description: Date the document was published
+        data_type: DATE
+      - name: content
+        description: Full text content of the document
+        data_type: STRING
+      - name: labels
+        description: Labels applied to this document
+        data_type: ARRAY
+      - name: metadata
+        description: Arbitrary additional metadata
+        data_type: OBJECT

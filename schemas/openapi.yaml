@@ -1,0 +1,93 @@
+openapi: 3.1.0
+info:
+  title: cpr-contracts
+  version: 0.0.0
+  description: Canonical models for Climate Policy Radar. Versioned by git tag, not info.version.
+paths: {}
+components:
+  schemas:
+    Document:
+      description: A document in the Climate Policy Radar corpus.
+      examples:
+        - content: null
+          id: doc1
+          labels:
+            - id: l1
+              name: Energy
+              type: sector
+          metadata: {}
+          publication_date: '2008-11-26'
+          source_url: https://example.com/doc.pdf
+          title: UK Climate Change Act 2008
+      properties:
+        id:
+          description: Unique identifier for the document
+          title: Id
+          type: string
+        title:
+          description: Document title
+          title: Title
+          type: string
+        source_url:
+          anyOf:
+            - type: string
+            - type: 'null'
+          default: null
+          description: URL of the source document
+          title: Source Url
+        publication_date:
+          anyOf:
+            - format: date
+              type: string
+            - type: 'null'
+          default: null
+          description: Date the document was published
+          title: Publication Date
+        content:
+          anyOf:
+            - type: string
+            - type: 'null'
+          default: null
+          description: Full text content of the document
+          title: Content
+        labels:
+          description: Labels applied to this document
+          items:
+            $ref: '#/components/schemas/Label'
+          title: Labels
+          type: array
+        metadata:
+          additionalProperties: true
+          description: Arbitrary additional metadata
+          title: Metadata
+          type: object
+      required:
+        - id
+        - title
+      title: Document
+      type: object
+    Label:
+      description: A classification label that can be applied to a Document.
+      examples:
+        - id: l1
+          name: Energy
+          type: sector
+      properties:
+        id:
+          description: Unique identifier for the label
+          title: Id
+          type: string
+        name:
+          description: Human-readable label name
+          title: Name
+          type: string
+        type:
+          description: Label category, e.g. 'sector', 'geography', 'instrument'
+          title: Type
+          type: string
+      required:
+        - id
+        - name
+        - type
+      title: Label
+      type: object

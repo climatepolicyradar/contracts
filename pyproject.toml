@@ -1,0 +1,33 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cpr-contracts"
+version = "1.0.0"
+description = "Canonical Pydantic models shared across the CPR stack"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pydantic>=2.0",
+]
+scripts = [
+    "pydantic>=2.0",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cpr_contracts"]
+
+[tool.uv]
+dev-dependencies = [
+    "pydantic>=2.0",
+    "pytest>=8.0",
+    "pyyaml>=6.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

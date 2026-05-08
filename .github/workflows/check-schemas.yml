@@ -1,0 +1,153 @@
+name: Schema checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  schema-checks:
+    name: Regenerate, auto-commit drift, classify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write       # auto-commit drifted artifacts
+      pull-requests: write  # post the sticky semver comment
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # On PRs, check out the head branch (not the merge commit) so auto-commit
+          # has a real branch to push to. On main pushes, github.head_ref is empty
+          # and we fall back to default behaviour.
+          ref: ${{ github.head_ref }}
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: typescript/package-lock.json
+
+      - name: Install Python deps
+        run: uv sync
+
+      - name: Install TypeScript deps
+        run: npm ci
+        working-directory: typescript
+
+      - name: Regenerate every artifact
+        run: |
+          uv run python scripts/generate_openapi.py
+          uv run python scripts/generate_dbt_schema.py
+          npm run generate --prefix typescript
+
+      - name: Auto-commit drift (PRs from this repo only)
+        id: autocommit
+        if: |
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: regenerate artifacts"
+          file_pattern: "schemas/openapi.yaml dbt/*.yml typescript/src/*"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fail if drift remains (fork PRs or main pushes)
+        run: |
+          git diff --exit-code schemas/ dbt/ typescript/src/ || {
+            echo ""
+            echo "Generated artifacts drifted from the Pydantic models, and the bot"
+            echo "could not commit the fix automatically (fork PR or non-PR run)."
+            echo "Run 'just generate' locally and push the result."
+            exit 1
+          }
+
+      - name: Type-check TypeScript
+        run: npx tsc --noEmit
+        working-directory: typescript
+
+      # ---- PR-only: semver classification ----
+
+      - name: Install oasdiff
+        if: github.event_name == 'pull_request'
+        run: |
+          curl -fsSL https://github.com/oasdiff/oasdiff/releases/latest/download/oasdiff_linux_amd64.tar.gz \
+            | tar -xz -C /tmp
+          sudo mv /tmp/oasdiff /usr/local/bin/oasdiff
+
+      - name: Get base-branch openapi
+        id: base
+        if: github.event_name == 'pull_request'
+        run: |
+          if git show "${{ github.event.pull_request.base.sha }}:schemas/openapi.yaml" > /tmp/base.openapi.yaml 2>/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No openapi.yaml on the base branch — first appearance."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Classify schema delta
+        id: classify
+        if: github.event_name == 'pull_request' && steps.base.outputs.exists == 'true'
+        run: |
+          uv run python scripts/classify_semver.py /tmp/base.openapi.yaml schemas/openapi.yaml > /tmp/result.json
+          LEVEL=$(jq -r '.level' /tmp/result.json)
+          jq -r '.comment' /tmp/result.json > /tmp/comment.md
+          echo "level=$LEVEL" >> "$GITHUB_OUTPUT"
+          echo "Classified as: $LEVEL"
+
+      - name: Detect breaking-change signal in commits / PR title
+        id: signal
+        if: github.event_name == 'pull_request' && steps.base.outputs.exists == 'true'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          PATTERN='[a-zA-Z]+(\([^)]+\))?!:'
+          HAYSTACK="$PR_TITLE
+          $PR_BODY
+          $(git log "$BASE_SHA..$HEAD_SHA" --format='%B' || true)"
+          if printf '%s\n' "$HAYSTACK" | grep -qE "$PATTERN"; then
+            echo "has_breaking=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_breaking=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Post sticky PR comment
+        if: github.event_name == 'pull_request' && steps.base.outputs.exists == 'true'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: semver-classification
+          path: /tmp/comment.md
+
+      - name: Warn if schema breaks but commits don't say so
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.classify.outputs.level == 'major' &&
+          steps.signal.outputs.has_breaking != 'true'
+        run: |
+          echo "::warning::Schema-breaking change detected. If intentional, use 'feat!:' in the PR title so release-please bumps the major version."
+
+      - name: Notify Slack of breaking change
+        if: |
+          github.event_name == 'pull_request' &&
+          steps.classify.outputs.level == 'major'
+        env:
+          SLACK_TOKEN: ${{ secrets.SLACK_NAVIGATOR_NOTIFIER_BOT_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+        run: |
+          curl -s -X POST "https://slack.com/api/chat.postMessage" \
+            -H "Authorization: Bearer $SLACK_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"channel\": \"#staging-updates\",
+              \"text\": \"⚠️ Breaking contract change: <$PR_URL|$PR_TITLE> by $PR_AUTHOR — <@U07TD111D98> please take a look.\"
+            }"
