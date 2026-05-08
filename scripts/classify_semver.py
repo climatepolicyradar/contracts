@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Classify the schema delta between two OpenAPI files as major/minor/patch/none.
+"""Classify the schema delta between two OpenAPI files as major/minor/none.
 
-Wraps `oasdiff changelog` and reduces its output to a single semver level plus
-a markdown summary suitable for posting as a PR comment.
+Wraps `openapi-changes report` and reduces its output to a single semver level
+plus a markdown summary suitable for posting as a PR comment.
 
 Usage:
     python scripts/classify_semver.py <base.yaml> <head.yaml>
 
 Outputs JSON to stdout:
-    {"level": "major|minor|patch|none", "comment": "<markdown>"}
+    {"level": "major|minor|none", "comment": "<markdown>"}
 
 Exit code is always 0 — gating happens in the CI workflow based on the level.
 """
@@ -19,12 +19,6 @@ import subprocess
 import sys
 from typing import Any
 
-# oasdiff changelog levels (numeric in --format json):
-#   3 = ERR    (breaking)
-#   2 = WARN   (probable backward-compat issue)
-#   1 = INFO   (backward-compat addition)
-LEVEL_BREAKING = 3
-
 LEVEL_LABELS = {
     "major": "🔴 MAJOR — breaking changes",
     "minor": "🟢 MINOR — non-breaking additions",
@@ -32,11 +26,11 @@ LEVEL_LABELS = {
 }
 
 
-def run_oasdiff(base: str, head: str) -> list[dict[str, Any]]:
-    if shutil.which("oasdiff") is None:
-        raise RuntimeError("oasdiff not found on PATH")
+def run_openapi_changes(base: str, head: str) -> list[dict[str, Any]]:
+    if shutil.which("openapi-changes") is None:
+        raise RuntimeError("openapi-changes not found on PATH")
     result = subprocess.run(
-        ["oasdiff", "changelog", base, head, "--format", "json"],
+        ["openapi-changes", "report", "--no-logo", "--reproducible", base, head],
         capture_output=True,
         text=True,
     )
@@ -46,11 +40,11 @@ def run_oasdiff(base: str, head: str) -> list[dict[str, Any]]:
         data = json.loads(result.stdout)
     except json.JSONDecodeError:
         return []
-    return data if isinstance(data, list) else []
+    return data.get("changes", [])
 
 
 def classify(changes: list[dict[str, Any]]) -> str:
-    if any(c.get("level") == LEVEL_BREAKING for c in changes):
+    if any(c.get("breaking") for c in changes):
         return "major"
     if changes:
         return "minor"
@@ -58,27 +52,34 @@ def classify(changes: list[dict[str, Any]]) -> str:
 
 
 def render_comment(level: str, changes: list[dict[str, Any]]) -> str:
-    breaking = [c for c in changes if c.get("level") == LEVEL_BREAKING]
-    others = [c for c in changes if c.get("level") != LEVEL_BREAKING]
+    breaking = [c for c in changes if c.get("breaking")]
+    others = [c for c in changes if not c.get("breaking")]
 
     lines = [
         "<!-- semver-classification -->",
         f"## {LEVEL_LABELS[level]}",
         "",
-        "Generated from `oasdiff changelog` against the base branch.",
+        "Generated from `openapi-changes` against the base branch.",
         "",
     ]
 
     if breaking:
         lines += ["### Breaking changes"]
         for c in breaking:
-            lines.append(f"- **{c.get('id', '?')}** — {c.get('text', '').strip()}")
+            path = c.get("path", "")
+            text = c.get("changeText", "").replace("_", " ")
+            old = c.get("old", "")
+            new = c.get("new", "")
+            detail = f"{old} → {new}" if old and new else (new or old)
+            lines.append(f"- **{path}** — {text}" + (f": {detail}" if detail else ""))
         lines.append("")
 
     if others:
         lines += ["### Non-breaking changes"]
         for c in others:
-            lines.append(f"- {c.get('id', '?')} — {c.get('text', '').strip()}")
+            path = c.get("path", "")
+            text = c.get("changeText", "").replace("_", " ")
+            lines.append(f"- {path} — {text}")
         lines.append("")
 
     if not changes:
@@ -100,7 +101,7 @@ def main() -> None:
         print("usage: classify_semver.py <base.yaml> <head.yaml>", file=sys.stderr)
         sys.exit(2)
     base, head = sys.argv[1], sys.argv[2]
-    changes = run_oasdiff(base, head)
+    changes = run_openapi_changes(base, head)
     level = classify(changes)
     print(json.dumps({"level": level, "comment": render_comment(level, changes)}))
 
