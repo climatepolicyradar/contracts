@@ -145,10 +145,15 @@ jobs:
           PR_TITLE: ${{ github.event.pull_request.title }}
           PR_AUTHOR: ${{ github.event.pull_request.user.login }}
         run: |
-          curl -s -X POST "https://slack.com/api/chat.postMessage" \
+          RESPONSE=$(curl -s -X POST "https://slack.com/api/chat.postMessage" \
             -H "Authorization: Bearer $SLACK_TOKEN" \
-            -H "Content-Type: application/json" \
+            -H "Content-Type: application/json; charset=utf-8" \
             -d "{
               \"channel\": \"#staging-updates\",
               \"text\": \"⚠️ Breaking contract change: <$PR_URL|$PR_TITLE> by $PR_AUTHOR — <@U07TD111D98> please take a look.\"
-            }"
+            }")
+          echo "$RESPONSE"
+          if [[ $(echo "$RESPONSE" | jq -r '.ok') != "true" ]]; then
+            echo "::error::Slack notification failed: $(echo "$RESPONSE" | jq -r '.error')"
+            exit 1
+          fi
