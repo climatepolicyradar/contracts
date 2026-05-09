@@ -16,9 +16,8 @@ jobs:
           app-id: ${{ secrets.POLICYRADAR_BOT_APP_ID }}
           private-key: ${{ secrets.POLICYRADAR_BOT_PRIVATE_KEY }}
 
-      - name: Approve and enable auto-merge
+      - name: Enable auto-merge
         run: |
-          gh pr review "${{ github.event.pull_request.number }}" --approve
           gh pr merge "${{ github.event.pull_request.number }}" --auto --squash
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
