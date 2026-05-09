@@ -13,6 +13,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: googleapis/release-please-action@v5
+        id: release
         with:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
+
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        if: steps.release.outputs.pr
+        with:
+          app-id: ${{ secrets.BENOIT_BOT_APP_ID }}
+          private-key: ${{ secrets.BENOIT_BOT_PRIVATE_KEY }}
+
+      - name: Auto-approve and enable auto-merge
+        if: steps.release.outputs.pr
+        run: |
+          gh pr review "${{ steps.release.outputs.pr }}" --approve
+          gh pr merge "${{ steps.release.outputs.pr }}" --auto --squash
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
