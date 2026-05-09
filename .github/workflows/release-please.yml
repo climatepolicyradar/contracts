@@ -28,7 +28,9 @@ jobs:
       - name: Auto-approve and enable auto-merge
         if: steps.release.outputs.pr
         run: |
-          gh pr review "${{ steps.release.outputs.pr }}" --approve
-          gh pr merge "${{ steps.release.outputs.pr }}" --auto --squash
+          PR_NUMBER=$(echo '${{ steps.release.outputs.pr }}' | jq -r '.number')
+          gh pr review "$PR_NUMBER" --approve
+          gh pr merge "$PR_NUMBER" --auto --squash
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
