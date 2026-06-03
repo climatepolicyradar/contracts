@@ -97,7 +97,7 @@ components:
           type: object
         labels:
           items:
-            $ref: '#/components/schemas/LabelRelationship'
+            $ref: '#/components/schemas/DocumentLabelRelationship'
           title: Labels
           type: array
         documents:
@@ -111,6 +111,25 @@ components:
         - labels
         - documents
       title: Document
+      type: object
+    DocumentLabelRelationship:
+      properties:
+        type:
+          title: Type
+          type: string
+        value:
+          $ref: '#/components/schemas/Label'
+        timestamp:
+          anyOf:
+            - format: date-time
+              type: string
+            - type: 'null'
+          default: null
+          title: Timestamp
+      required:
+        - type
+        - value
+      title: DocumentLabelRelationship
       type: object
     DocumentRelationship:
       properties:
@@ -163,7 +182,7 @@ components:
         labels:
           default: []
           items:
-            $ref: '#/components/schemas/LabelRelationship'
+            $ref: '#/components/schemas/DocumentLabelRelationship'
           title: Labels
           type: array
       required:
@@ -214,7 +233,7 @@ components:
           type: object
         labels:
           items:
-            $ref: '#/components/schemas/LabelRelationship'
+            $ref: '#/components/schemas/LabelLabelRelationship'
           title: Labels
           type: array
       required:
@@ -224,7 +243,7 @@ components:
         - labels
       title: Label
       type: object
-    LabelRelationship:
+    LabelLabelRelationship:
       properties:
         type:
           title: Type
@@ -241,7 +260,7 @@ components:
       required:
         - type
         - value
-      title: LabelRelationship
+      title: LabelLabelRelationship
       type: object
     LabelWithoutLabelRelationships:
       properties:
