@@ -6,7 +6,7 @@ from .models import (
     DocumentWithoutDocumentRelationships,
     Item,
     Label,
-    LabelRelationship,
+    LabelLabelRelationship,
     LabelWithoutLabelRelationships,
 )
 
@@ -18,7 +18,7 @@ __all__ = [
     "DocumentWithoutDocumentRelationships",
     "Item",
     "Label",
-    "LabelRelationship",
+    "LabelLabelRelationship",
     "LabelWithoutLabelRelationships",
 ]
 __version__ = "0.1.1"  # x-release-please-version
