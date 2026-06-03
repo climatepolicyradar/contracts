@@ -12,6 +12,8 @@ class LabelRelationship(BaseModel):
 
 
 class BaseLabel(BaseModel):
+    id: str
+    type: str
     value: str
     attributes: dict[str, str | float | bool] = {}
 
