@@ -42,6 +42,8 @@ export type LabelRelationship = {
 
 export type LabelWithoutLabelRelationships = {
     attributes?: { [key: string]: boolean | number | string };
+    id:          string;
+    type:        string;
     value:       string;
     [property: string]: any;
 }
