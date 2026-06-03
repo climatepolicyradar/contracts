@@ -42,6 +42,12 @@ components:
       type: object
     BaseLabel:
       properties:
+        id:
+          title: Id
+          type: string
+        type:
+          title: Type
+          type: string
         value:
           title: Value
           type: string
@@ -55,6 +61,8 @@ components:
           title: Attributes
           type: object
       required:
+        - id
+        - type
         - value
       title: BaseLabel
       type: object
@@ -186,6 +194,12 @@ components:
       type: object
     Label:
       properties:
+        id:
+          title: Id
+          type: string
+        type:
+          title: Type
+          type: string
         value:
           title: Value
           type: string
@@ -204,6 +218,8 @@ components:
           title: Labels
           type: array
       required:
+        - id
+        - type
         - value
         - labels
       title: Label
@@ -229,6 +245,12 @@ components:
       type: object
     LabelWithoutLabelRelationships:
       properties:
+        id:
+          title: Id
+          type: string
+        type:
+          title: Type
+          type: string
         value:
           title: Value
           type: string
@@ -242,6 +264,8 @@ components:
           title: Attributes
           type: object
       required:
+        - id
+        - type
         - value
       title: LabelWithoutLabelRelationships
       type: object
