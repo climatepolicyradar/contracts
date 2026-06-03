@@ -1,6 +1,6 @@
 {
   "name": "@climatepolicyradar/contracts",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "TypeScript types generated from the cpr-contracts OpenAPI contract",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
