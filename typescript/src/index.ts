@@ -4,7 +4,7 @@ export type Document = {
     documents:    DocumentRelationship[];
     id:           string;
     items?:       Item[];
-    labels:       LabelRelationship[];
+    labels:       DocumentLabelRelationship[];
     title:        string;
     [property: string]: any;
 }
@@ -21,7 +21,7 @@ export type DocumentWithoutDocumentRelationships = {
     description?: null | string;
     id:           string;
     items?:       Item[];
-    labels?:      LabelRelationship[];
+    labels?:      DocumentLabelRelationship[];
     title:        string;
     [property: string]: any;
 }
@@ -33,7 +33,23 @@ export type Item = {
     [property: string]: any;
 }
 
-export type LabelRelationship = {
+export type DocumentLabelRelationship = {
+    timestamp?: Date | null;
+    type:       string;
+    value:      Label;
+    [property: string]: any;
+}
+
+export type Label = {
+    attributes?: { [key: string]: boolean | number | string };
+    id:          string;
+    labels:      LabelLabelRelationship[];
+    type:        string;
+    value:       string;
+    [property: string]: any;
+}
+
+export type LabelLabelRelationship = {
     timestamp?: Date | null;
     type:       string;
     value:      LabelWithoutLabelRelationships;
