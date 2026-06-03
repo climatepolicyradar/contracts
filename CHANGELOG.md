@@ -2,6 +2,13 @@
 
 All notable changes will be documented here. This file is managed by [release-please](https://github.com/googleapis/release-please) — entries are generated from Conventional Commit messages on `main`.
 
+## [0.1.2](https://github.com/climatepolicyradar/contracts/compare/v0.1.1...v0.1.2) (2026-06-03)
+
+
+### Bug fixes
+
+* use LabelLabelRelationship and DocumentLabelRelationship ([a26c207](https://github.com/climatepolicyradar/contracts/commit/a26c2078e1b5ea6c23299a71abcefcfc30c007d5))
+
 ## [0.1.1](https://github.com/climatepolicyradar/contracts/compare/v0.1.0...v0.1.1) (2026-06-03)
 
 
